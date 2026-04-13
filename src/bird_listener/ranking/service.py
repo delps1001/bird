@@ -18,6 +18,7 @@ def rank_birds(
     summaries = []
     for name, detections in species.items():
         best = max(detections, key=lambda d: d.confidence)
+        latest = max(detections, key=lambda d: d.detected_at)
         summaries.append(
             BirdSummary(
                 common_name=name,
@@ -25,6 +26,7 @@ def rank_birds(
                 lifetime_count=lifetime_counts.get(name, 0),
                 recent_count=len(detections),
                 best_confidence=best.confidence,
+                last_detected_at=latest.detected_at,
             )
         )
 

@@ -19,3 +19,4 @@ class BirdSummary:
     lifetime_count: int
     recent_count: int
     best_confidence: float
+    last_detected_at: datetime | None = None

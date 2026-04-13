@@ -11,3 +11,4 @@ detections.db
 .DS_Store
 
 .idea/
+/birds.db

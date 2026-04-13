@@ -43,14 +43,27 @@ def main() -> None:
         default=None,
         help="Path to BirdNET-Pi birds.db for display-only mode",
     )
+    parser.add_argument(
+        "--renderer",
+        choices=["pillow", "grid", "picolay", "magazine", "scoreboard", "fieldguide", "filmstrip", "tower"],
+        default="grid",
+        help="Which display renderer to use",
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--inset",
+        type=float,
+        default=None,
+        help="Boundary inset fraction (e-ink frame cropping)",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG if args.debug else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    config = Config(
+    config_kwargs = dict(
         lat=args.lat,
         lon=args.lon,
         min_confidence=args.min_conf,
@@ -62,10 +75,42 @@ def main() -> None:
         capture_duration_sec=args.duration,
         capture_overlap_sec=args.overlap,
         loop_interval_sec=args.interval,
+        display_renderer=args.renderer,
     )
+    if args.inset is not None:
+        config_kwargs["boundary_inset"] = args.inset
+    config = Config(**config_kwargs)
 
     # Display
-    renderer = PillowRenderer()
+    if config.display_renderer == "grid":
+        from bird_listener.display.grid_layout import GridDisplayLayout
+        from bird_listener.display.grid_renderer import GridRenderer
+
+        grid_layout = GridDisplayLayout(inset=config.boundary_inset)
+        renderer = GridRenderer(layout=grid_layout)
+    elif config.display_renderer == "picolay":
+        from bird_listener.display.grid_layout import GridDisplayLayout
+        from bird_listener.display.grid_renderer_picolay import PicolayGridRenderer
+
+        grid_layout = GridDisplayLayout(inset=config.boundary_inset)
+        renderer = PicolayGridRenderer(layout=grid_layout)
+    elif config.display_renderer == "magazine":
+        from bird_listener.display.magazine_renderer import MagazineRenderer
+        renderer = MagazineRenderer(inset=config.boundary_inset)
+    elif config.display_renderer == "scoreboard":
+        from bird_listener.display.scoreboard_renderer import ScoreboardRenderer
+        renderer = ScoreboardRenderer(inset=config.boundary_inset)
+    elif config.display_renderer == "fieldguide":
+        from bird_listener.display.fieldguide_renderer import FieldGuideRenderer
+        renderer = FieldGuideRenderer(inset=config.boundary_inset)
+    elif config.display_renderer == "filmstrip":
+        from bird_listener.display.filmstrip_renderer import FilmstripRenderer
+        renderer = FilmstripRenderer(inset=config.boundary_inset)
+    elif config.display_renderer == "tower":
+        from bird_listener.display.tower_renderer import TowerRenderer
+        renderer = TowerRenderer(inset=config.boundary_inset)
+    else:
+        renderer = PillowRenderer()
     display = FileDisplayDriver(config.output_dir)
 
     if args.birdnetpi_db:

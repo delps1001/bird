@@ -17,4 +17,6 @@ class Config:
     capture_duration_sec: int = 15
     capture_overlap_sec: int = 3  # overlap between consecutive chunks
     loop_interval_sec: int = 30
-    recent_window_hours: int = 24
+    recent_window_hours: int = 144
+    display_renderer: str = "fieldguide"
+    boundary_inset: float = .10

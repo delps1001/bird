@@ -39,6 +39,7 @@ class Orchestrator:
         self._display = display
         self._audio_queue: queue.Queue[tuple[bytes, int]] = queue.Queue(maxsize=2)
         self._stop = threading.Event()
+        self._last_ranked_names: list[str] | None = None
 
     def run_once(self) -> None:
         """Execute one capture-analyze-render cycle (for testing)."""
@@ -169,6 +170,12 @@ class Orchestrator:
         recent = self._repo.get_detections_since(since)
         lifetime = self._repo.get_lifetime_counts()
         ranked = rank_birds(recent, lifetime)
+
+        ranked_names = [b.common_name for b in ranked]
+        if ranked_names == self._last_ranked_names:
+            logger.info("Bird list unchanged, skipping display refresh")
+            return
+        self._last_ranked_names = ranked_names
 
         logger.info("Rendering display with %d species...", len(ranked))
         image = self._renderer.render(
