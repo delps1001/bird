@@ -49,6 +49,7 @@ def main() -> None:
         default="grid",
         help="Which display renderer to use",
     )
+    parser.add_argument("--eink", action="store_true", help="Use e-ink display driver instead of file output")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--inset",
@@ -111,7 +112,11 @@ def main() -> None:
         renderer = TowerRenderer(inset=config.boundary_inset)
     else:
         renderer = PillowRenderer()
-    display = FileDisplayDriver(config.output_dir)
+    if args.eink:
+        from bird_listener.display.eink_driver import EinkDisplayDriver
+        display = EinkDisplayDriver()
+    else:
+        display = FileDisplayDriver(config.output_dir)
 
     if args.birdnetpi_db:
         # Display-only mode: read from BirdNET-Pi's database

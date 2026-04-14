@@ -12,17 +12,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 EPAPER_LIB="${EPAPER_LIB:-$(cd "$PROJECT_DIR/../e-Paper/RaspberryPi_JetsonNano/python/lib" && pwd)}"
-VENV_PIP="$PROJECT_DIR/.venv/bin/pip"
-
 if [ ! -d "$EPAPER_LIB/waveshare_epd" ]; then
     echo "Error: waveshare_epd not found at $EPAPER_LIB/waveshare_epd" >&2
     echo "Set EPAPER_LIB to the directory containing the waveshare_epd package." >&2
     exit 1
 fi
 
-if [ ! -x "$VENV_PIP" ]; then
-    echo "Error: virtual environment pip not found at $VENV_PIP" >&2
-    echo "Create the venv first:  python -m venv .venv" >&2
+# Prefer uv, fall back to pip in the venv
+if command -v uv &>/dev/null; then
+    INSTALLER=(uv pip install)
+elif [ -x "$PROJECT_DIR/.venv/bin/pip" ]; then
+    INSTALLER=("$PROJECT_DIR/.venv/bin/pip" install)
+else
+    echo "Error: neither uv nor .venv/bin/pip found." >&2
+    echo "Install uv (https://docs.astral.sh/uv/) or create a venv with pip." >&2
     exit 1
 fi
 
@@ -46,7 +49,7 @@ else
 fi
 
 echo "Installing waveshare_epd from $EPAPER_LIB ..."
-"$VENV_PIP" install -e "$EPAPER_LIB"
+"${INSTALLER[@]}" -e "$EPAPER_LIB"
 
 echo ""
 echo "Done. Verify with:  .venv/bin/python -c 'import waveshare_epd; print(waveshare_epd)'"
