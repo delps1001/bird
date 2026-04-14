@@ -11,6 +11,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
 legacy = ["birdnetlib>=0.18", "librosa>=0.10", "tensorflow>=2.16"]
+# waveshare_epd is not on PyPI — install from the local e-Paper repo:
+#   pip install ./e-Paper/RaspberryPi_JetsonNano/python/lib/
+pi = ["spidev>=3.0", "gpiozero>=2.0"]
 
 [build-system]
 requires = ["setuptools"]
