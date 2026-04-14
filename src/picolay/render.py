@@ -10,11 +10,24 @@ from .style import Style
 Node = Box | Text | Img
 
 
-def render(node: Node, width: int, height: int, background: tuple[int, int, int] = (255, 255, 255)) -> Image.Image:
-    """Render a node tree to a Pillow Image of the given dimensions."""
+def render(
+    node: Node,
+    width: int,
+    height: int,
+    background: tuple[int, int, int] | None = (255, 255, 255),
+) -> Image.Image:
+    """Render a node tree to a Pillow Image of the given dimensions.
+
+    Pass background=None for a transparent RGBA canvas.
+    """
     layout = compute_layout(node, float(width), float(height))
-    canvas = Image.new("RGBA", (width, height), background + (255,))
+    if background is None:
+        canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    else:
+        canvas = Image.new("RGBA", (width, height), background + (255,))
     _draw_layout(canvas, layout, 0, 0)
+    if background is None:
+        return canvas
     return canvas.convert("RGB")
 
 

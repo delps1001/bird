@@ -18,7 +18,6 @@ from bird_listener.persistence.models import BirdSummary
 from picolay import Box, Img, Style, Text, render
 
 _MIN_FONT = 6
-_PARCHMENT = (248, 241, 227)
 _INK = (55, 40, 30)
 _INK_LIGHT = (120, 100, 80)
 _RULE_COLOR = (190, 175, 155)
@@ -92,7 +91,7 @@ class FieldGuideRenderer:
 
         if not birds:
             tree = Box(
-                style=Style(width=width, height=height, background=_PARCHMENT,
+                style=Style(width=width, height=height,
                             padding=(inset_y + border * 2, inset_x + border * 2,
                                      inset_y + border * 2, inset_x + border * 2),
                             flex_direction="column", align_items="center", justify_content="center"),
@@ -101,7 +100,7 @@ class FieldGuideRenderer:
                          style=Style(font_size=max(_MIN_FONT, usable_h // 18), font_color=_INK_LIGHT)),
                 ],
             )
-            return render(tree, width, height, background=_PARCHMENT)
+            return render(tree, width, height, background=None)
 
         display = birds[:8]
         hero = display[0]
@@ -211,7 +210,7 @@ class FieldGuideRenderer:
         # Thin page border via nested boxes
         root = Box(
             style=Style(
-                width=width, height=height, background=_PARCHMENT,
+                width=width, height=height,
                 padding=(inset_y, inset_x, inset_y, inset_x),
                 flex_direction="column", align_items="center", justify_content="center",
             ),
@@ -219,11 +218,11 @@ class FieldGuideRenderer:
                 Box(
                     style=Style(
                         width=inner_w + border * 2, height=inner_h + border * 2,
-                        border=(border, _BORDER_COLOR), background=_PARCHMENT,
+                        border=(border, _BORDER_COLOR),
                         flex_direction="column", align_items="center", justify_content="center",
                     ),
                     children=[body],
                 ),
             ],
         )
-        return render(root, width, height, background=_PARCHMENT)
+        return render(root, width, height, background=None)
