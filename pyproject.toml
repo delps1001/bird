@@ -13,7 +13,8 @@ dev = ["pytest>=7.0"]
 legacy = ["birdnetlib>=0.18", "librosa>=0.10", "tensorflow>=2.16"]
 # waveshare_epd is not on PyPI — install from the local e-Paper repo:
 #   pip install ./e-Paper/RaspberryPi_JetsonNano/python/lib/
-pi = ["spidev>=3.0", "gpiozero>=2.0"]
+# lgpio is a system package (sudo apt install python3-lgpio) — symlink into venv.
+pi = ["spidev>=3.0", "gpiozero>=2.0", "lgpio>=0.4"]
 
 [build-system]
 requires = ["setuptools"]
