@@ -19,4 +19,4 @@ class Config:
     loop_interval_sec: int = 30
     recent_window_hours: int = 144
     display_renderer: str = "fieldguide"
-    boundary_inset: float = .10
+    boundary_inset: float = .07
