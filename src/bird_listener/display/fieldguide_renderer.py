@@ -100,7 +100,7 @@ class FieldGuideRenderer:
                          style=Style(font_size=max(_MIN_FONT, usable_h // 18), font_color=_INK_LIGHT)),
                 ],
             )
-            return render(tree, width, height, background=None)
+            return render(tree, width, height, background=(255, 255, 255))
 
         display = birds[:8]
         hero = display[0]
@@ -225,4 +225,4 @@ class FieldGuideRenderer:
                 ),
             ],
         )
-        return render(root, width, height, background=None)
+        return render(root, width, height, background=(255, 255, 255))
