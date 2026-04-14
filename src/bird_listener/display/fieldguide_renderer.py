@@ -22,7 +22,6 @@ _INK = (55, 40, 30)
 _INK_LIGHT = (120, 100, 80)
 _RULE_COLOR = (190, 175, 155)
 _ACCENT = (140, 60, 40)       # sepia red for rank highlights
-_BORDER_COLOR = (170, 155, 135)
 
 
 
@@ -85,15 +84,13 @@ class FieldGuideRenderer:
         usable_w = width - 2 * inset_x
         usable_h = height - 2 * inset_y
 
-        border = max(2, min(usable_w, usable_h) // 80)
-        inner_w = usable_w - border * 4
-        inner_h = usable_h - border * 4
+        inner_w = usable_w
+        inner_h = usable_h
 
         if not birds:
             tree = Box(
                 style=Style(width=width, height=height,
-                            padding=(inset_y + border * 2, inset_x + border * 2,
-                                     inset_y + border * 2, inset_x + border * 2),
+                            padding=(inset_y, inset_x, inset_y, inset_x),
                             flex_direction="column", align_items="center", justify_content="center"),
                 children=[
                     Text("~ No specimens recorded ~",
@@ -217,8 +214,7 @@ class FieldGuideRenderer:
             children=[
                 Box(
                     style=Style(
-                        width=inner_w + border * 2, height=inner_h + border * 2,
-                        border=(border, _BORDER_COLOR),
+                        width=inner_w, height=inner_h,
                         flex_direction="column", align_items="center", justify_content="center",
                     ),
                     children=[body],
