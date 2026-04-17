@@ -44,12 +44,15 @@ class BirdNetGoRepository:
         min_confidence: float = 0.0,
         label_file: Path | None = None,
     ) -> None:
-        uri = f"file:{db_path}?mode=ro"
-        self._conn = sqlite3.connect(uri, uri=True, check_same_thread=False)
-        self._conn.execute("PRAGMA foreign_keys = ON")
+        self._uri = f"file:{db_path}?mode=ro"
         self._min_confidence = min_confidence
         lf = label_file or _DEFAULT_LABELS
         self._labels = load_label_map(lf) if lf.exists() else {}
+
+    def _connect(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self._uri, uri=True)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
 
     def _common_name(self, scientific_name: str) -> str:
         """Resolve common name, falling back to scientific name."""
@@ -60,14 +63,18 @@ class BirdNetGoRepository:
 
     def get_detections_since(self, since: datetime) -> list[Detection]:
         since_ts = int(since.replace(tzinfo=timezone.utc).timestamp())
-        rows = self._conn.execute(
-            "SELECT l.scientific_name, d.confidence, d.detected_at "
-            "FROM detections d "
-            "JOIN labels l ON d.label_id = l.id "
-            "WHERE d.detected_at >= ? AND d.confidence >= ? "
-            "ORDER BY d.detected_at DESC",
-            (since_ts, self._min_confidence),
-        ).fetchall()
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT l.scientific_name, d.confidence, d.detected_at "
+                "FROM detections d "
+                "JOIN labels l ON d.label_id = l.id "
+                "WHERE d.detected_at >= ? AND d.confidence >= ? "
+                "ORDER BY d.detected_at DESC",
+                (since_ts, self._min_confidence),
+            ).fetchall()
+        finally:
+            conn.close()
         return [
             Detection(
                 common_name=self._common_name(row[0]),
@@ -81,12 +88,16 @@ class BirdNetGoRepository:
         ]
 
     def get_lifetime_counts(self) -> dict[str, int]:
-        rows = self._conn.execute(
-            "SELECT l.scientific_name, COUNT(*) "
-            "FROM detections d "
-            "JOIN labels l ON d.label_id = l.id "
-            "WHERE d.confidence >= ? "
-            "GROUP BY l.scientific_name",
-            (self._min_confidence,),
-        ).fetchall()
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT l.scientific_name, COUNT(*) "
+                "FROM detections d "
+                "JOIN labels l ON d.label_id = l.id "
+                "WHERE d.confidence >= ? "
+                "GROUP BY l.scientific_name",
+                (self._min_confidence,),
+            ).fetchall()
+        finally:
+            conn.close()
         return {self._common_name(row[0]): row[1] for row in rows}
