@@ -32,7 +32,6 @@ def _catalog_entry(bird: BirdSummary, assets_dir: Path, w: int, h: int, rank: in
     text_w = w - thumb - 30
 
     name_sz = max(_MIN_FONT, h // 3)
-    sci_sz = max(_MIN_FONT, name_sz * 2 // 3)
     count_text = f"{bird.lifetime_count}x"
 
     return Box(
@@ -48,10 +47,9 @@ def _catalog_entry(bird: BirdSummary, assets_dir: Path, w: int, h: int, rank: in
             )),
             Img(src=bird_img, style=Style(width=thumb, height=thumb, object_fit="contain", image_rendering="pixelated")),
             Box(
-                style=Style(flex_grow=1, flex_direction="column", justify_content="center", gap=2),
+                style=Style(flex_grow=1, flex_direction="column", justify_content="center"),
                 children=[
                     Text(bird.common_name, style=Style(font_size=name_sz, font_color=_INK, font_shrink=True)),
-                    Text(bird.scientific_name, style=Style(font_size=sci_sz, font_color=_INK_LIGHT, font_shrink=True)),
                 ],
             ),
             Text(count_text, style=Style(
