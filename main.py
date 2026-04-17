@@ -44,6 +44,12 @@ def main() -> None:
         help="Path to BirdNET-Pi birds.db for display-only mode",
     )
     parser.add_argument(
+        "--birdnetgo-db",
+        type=str,
+        default=None,
+        help="Path to BirdNET-Go database for display-only mode",
+    )
+    parser.add_argument(
         "--renderer",
         choices=["pillow", "grid", "picolay", "magazine", "scoreboard", "fieldguide", "filmstrip", "tower"],
         default="grid",
@@ -124,6 +130,22 @@ def main() -> None:
 
         repository = BirdNetPiRepository(
             Path(args.birdnetpi_db),
+            min_confidence=config.min_confidence,
+        )
+
+        orchestrator = Orchestrator(
+            config=config,
+            repository=repository,
+            renderer=renderer,
+            display=display,
+        )
+        orchestrator.run_display_only(once=args.once)
+    elif args.birdnetgo_db:
+        # Display-only mode: read from BirdNET-Go's database
+        from bird_listener.persistence.birdnetgo_repository import BirdNetGoRepository
+
+        repository = BirdNetGoRepository(
+            Path(args.birdnetgo_db),
             min_confidence=config.min_confidence,
         )
 
