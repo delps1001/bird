@@ -30,6 +30,10 @@ def rank_birds(
             )
         )
 
-    # Sort: rarest first (lowest lifetime count), then by best confidence descending
-    summaries.sort(key=lambda s: (s.lifetime_count, -s.best_confidence))
+    # Sort: rarest first, then most-recently-seen, then best confidence descending
+    summaries.sort(key=lambda s: (
+        s.lifetime_count,
+        -(s.last_detected_at.timestamp() if s.last_detected_at else 0),
+        -s.best_confidence,
+    ))
     return summaries
