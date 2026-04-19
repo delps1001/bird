@@ -311,6 +311,21 @@ def test_min_confidence_zero_returns_all(birdnetgo_db, label_file):
 # ---- multiple detections of same species ----------------------------------
 
 
+def test_first_detection_times(birdnetgo_db, label_file):
+    conn = sqlite3.connect(str(birdnetgo_db))
+    base = datetime(2026, 4, 10, 12, 0, 0)
+    _seed(conn, "Haemorhous mexicanus", 0.9, base)
+    _seed(conn, "Haemorhous mexicanus", 0.8, base + timedelta(hours=3))
+    _seed(conn, "Cyanocitta cristata", 0.7, base + timedelta(hours=1))
+    conn.close()
+
+    repo = BirdNetGoRepository(birdnetgo_db, label_file=label_file)
+    firsts = repo.get_first_detection_times()
+
+    assert firsts["House Finch"] == base
+    assert firsts["Blue Jay"] == base + timedelta(hours=1)
+
+
 def test_multiple_detections_same_species_share_label(birdnetgo_db, label_file):
     conn = sqlite3.connect(str(birdnetgo_db))
     now = datetime(2026, 4, 10, 12, 0, 0)

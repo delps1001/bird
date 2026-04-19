@@ -169,7 +169,8 @@ class Orchestrator:
         since = now - timedelta(hours=self._config.recent_window_hours)
         recent = self._repo.get_detections_since(since)
         lifetime = self._repo.get_lifetime_counts()
-        ranked = rank_birds(recent, lifetime)
+        first_seen = self._repo.get_first_detection_times()
+        ranked = rank_birds(recent, lifetime, first_seen=first_seen, new_since=since)
 
         ranked_names = [b.common_name for b in ranked]
         if ranked_names == self._last_ranked_names:

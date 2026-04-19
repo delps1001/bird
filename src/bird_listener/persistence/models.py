@@ -20,3 +20,4 @@ class BirdSummary:
     recent_count: int
     best_confidence: float
     last_detected_at: datetime | None = None
+    is_new: bool = False
