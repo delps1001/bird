@@ -53,3 +53,17 @@ def test_empty_db(db: sqlite3.Connection) -> None:
     repo = SQLiteDetectionRepository(db)
     assert repo.get_detections_since(datetime(2020, 1, 1)) == []
     assert repo.get_lifetime_counts() == {}
+    assert repo.get_first_detection_times() == {}
+
+
+def test_first_detection_times(db: sqlite3.Connection) -> None:
+    repo = SQLiteDetectionRepository(db)
+    base = datetime(2026, 4, 6, 12, 0, 0)
+
+    repo.record_detection(Detection("House Finch", "Haemorhous mexicanus", 0.8, base))
+    repo.record_detection(Detection("House Finch", "Haemorhous mexicanus", 0.9, base + timedelta(hours=2)))
+    repo.record_detection(Detection("Blue Jay", "Cyanocitta cristata", 0.7, base + timedelta(hours=1)))
+
+    firsts = repo.get_first_detection_times()
+    assert firsts["House Finch"] == base
+    assert firsts["Blue Jay"] == base + timedelta(hours=1)

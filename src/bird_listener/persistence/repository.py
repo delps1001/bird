@@ -44,3 +44,9 @@ class SQLiteDetectionRepository:
             "SELECT common_name, COUNT(*) FROM detections GROUP BY common_name"
         ).fetchall()
         return {r[0]: r[1] for r in rows}
+
+    def get_first_detection_times(self) -> dict[str, datetime]:
+        rows = self._conn.execute(
+            "SELECT common_name, MIN(detected_at) FROM detections GROUP BY common_name"
+        ).fetchall()
+        return {r[0]: datetime.fromisoformat(r[1]) for r in rows}

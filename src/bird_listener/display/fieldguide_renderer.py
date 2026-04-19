@@ -32,7 +32,7 @@ def _catalog_entry(bird: BirdSummary, assets_dir: Path, w: int, h: int, rank: in
     text_w = w - thumb - 30
 
     name_sz = max(_MIN_FONT, h // 3)
-    count_text = f"{bird.lifetime_count}x"
+    count_text = "\u2605" if bird.is_new else f"{bird.lifetime_count}x"
 
     return Box(
         style=Style(
@@ -115,6 +115,8 @@ class FieldGuideRenderer:
         if hero.lifetime_count == 1:
             s = ""
 
+        hero_count_text = "\u2605" if hero.is_new else f"{hero.lifetime_count}x"
+
         left_col = Box(
             style=Style(
                 width=left_w, height=inner_h,
@@ -140,7 +142,7 @@ class FieldGuideRenderer:
                             font_shrink=True,
                         )),
                         Text(
-                            f"{hero.lifetime_count}x",
+                            hero_count_text,
                             style=Style(
                                 font_size=max(_MIN_FONT, sci_sz - 2), font_color=_INK_LIGHT,
                                 text_align="center", padding=(4, 0, 0, 0),

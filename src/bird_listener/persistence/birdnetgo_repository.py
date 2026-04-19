@@ -101,3 +101,23 @@ class BirdNetGoRepository:
         finally:
             conn.close()
         return {self._common_name(row[0]): row[1] for row in rows}
+
+    def get_first_detection_times(self) -> dict[str, datetime]:
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT l.scientific_name, MIN(d.detected_at) "
+                "FROM detections d "
+                "JOIN labels l ON d.label_id = l.id "
+                "WHERE d.confidence >= ? "
+                "GROUP BY l.scientific_name",
+                (self._min_confidence,),
+            ).fetchall()
+        finally:
+            conn.close()
+        return {
+            self._common_name(row[0]): datetime.fromtimestamp(
+                row[1], tz=timezone.utc
+            ).replace(tzinfo=None)
+            for row in rows
+        }

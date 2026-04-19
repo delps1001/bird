@@ -98,6 +98,21 @@ def test_get_lifetime_counts(birdnetpi_db):
     assert counts["Blue Jay"] == 2
 
 
+def test_first_detection_times(birdnetpi_db):
+    conn = sqlite3.connect(str(birdnetpi_db))
+    base = datetime(2026, 4, 10, 12, 0, 0)
+    _seed(conn, "House Finch", "Haemorhous mexicanus", 0.9, base)
+    _seed(conn, "House Finch", "Haemorhous mexicanus", 0.8, base + timedelta(hours=2))
+    _seed(conn, "Blue Jay", "Cyanocitta cristata", 0.7, base + timedelta(hours=1))
+    conn.close()
+
+    repo = BirdNetPiRepository(birdnetpi_db)
+    firsts = repo.get_first_detection_times()
+
+    assert firsts["House Finch"] == base
+    assert firsts["Blue Jay"] == base + timedelta(hours=1)
+
+
 def test_record_detection_raises(birdnetpi_db):
     repo = BirdNetPiRepository(birdnetpi_db)
     det = Detection("Test", "Testus", 0.5, datetime.now())

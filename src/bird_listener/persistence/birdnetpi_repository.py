@@ -46,3 +46,14 @@ class BirdNetPiRepository:
             (self._min_confidence,),
         ).fetchall()
         return {row[0]: row[1] for row in rows}
+
+    def get_first_detection_times(self) -> dict[str, datetime]:
+        rows = self._conn.execute(
+            "SELECT Com_Name, MIN(Date || ' ' || Time) FROM detections "
+            "WHERE Confidence >= ? GROUP BY Com_Name",
+            (self._min_confidence,),
+        ).fetchall()
+        return {
+            row[0]: datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
+            for row in rows
+        }
