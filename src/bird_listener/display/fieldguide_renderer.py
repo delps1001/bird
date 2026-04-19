@@ -67,8 +67,9 @@ def _h_rule(w: int) -> Box:
 class FieldGuideRenderer:
     """Vintage naturalist field-guide layout."""
 
-    def __init__(self, inset: float = 0.0):
+    def __init__(self, inset: float = 0.0, max_birds: int = 5):
         self._inset = inset
+        self._max_birds = max_birds
 
     def render(
         self,
@@ -97,7 +98,7 @@ class FieldGuideRenderer:
             )
             return render(tree, width, height, background=(255, 255, 255))
 
-        display = birds[:8]
+        display = birds[:self._max_birds]
         hero = display[0]
 
         # Two-column split
@@ -179,7 +180,9 @@ class FieldGuideRenderer:
 
         others = display[1:]
         if others:
-            row_h = min((inner_h - 50) // max(1, len(others)), inner_h // 8)
+            available_cat_h = inner_h - cat_header_h - 1
+            n = len(others)
+            row_h = (available_cat_h - max(0, n - 1)) // n
             for i, bird in enumerate(others):
                 catalog_children.append(
                     _catalog_entry(bird, assets_dir, right_w - 8, row_h, rank=i + 2)
