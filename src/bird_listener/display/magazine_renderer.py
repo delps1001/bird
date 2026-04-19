@@ -75,6 +75,10 @@ class MagazineRenderer:
     def __init__(self, inset: float = 0.0):
         self._inset = inset
 
+    @property
+    def max_birds(self) -> int:
+        return 6
+
     def render(
         self,
         birds: list[BirdSummary],

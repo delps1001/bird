@@ -46,6 +46,10 @@ class PillowRenderer:
     def __init__(self, layout: DisplayLayout | None = None) -> None:
         self._layout = layout or DEFAULT_LAYOUT
 
+    @property
+    def max_birds(self) -> int:
+        return 1 + self._layout.secondary_columns
+
     def render(
         self,
         birds: list[BirdSummary],

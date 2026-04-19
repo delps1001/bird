@@ -172,7 +172,10 @@ class Orchestrator:
         first_seen = self._repo.get_first_detection_times()
         ranked = rank_birds(recent, lifetime, first_seen=first_seen, new_since=since)
 
-        ranked_names = [b.common_name for b in ranked]
+        max_birds = getattr(self._renderer, "max_birds", None)
+        display_birds = ranked[:max_birds]
+
+        ranked_names = [b.common_name for b in display_birds]
         if ranked_names == self._last_ranked_names:
             logger.info("Bird list unchanged, skipping display refresh")
             return

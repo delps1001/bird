@@ -26,6 +26,10 @@ class GridRenderer:
     def __init__(self, layout: GridDisplayLayout | None = None) -> None:
         self._layout = layout or DEFAULT_GRID_LAYOUT
 
+    @property
+    def max_birds(self) -> int:
+        return 6
+
     def render(
         self,
         birds: list[BirdSummary],

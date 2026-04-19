@@ -71,6 +71,10 @@ class FieldGuideRenderer:
         self._inset = inset
         self._max_birds = max_birds
 
+    @property
+    def max_birds(self) -> int:
+        return self._max_birds
+
     def render(
         self,
         birds: list[BirdSummary],
