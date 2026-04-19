@@ -8,6 +8,8 @@ from PIL import ImageFont
 
 _font_cache: dict[tuple[Optional[str], int], ImageFont.FreeTypeFont] = {}
 
+_BUNDLED_FONT = str(Path(__file__).parent / "DejaVuSans.ttf")
+
 
 def load_font(path: Optional[str] = None, size: int = 16) -> ImageFont.FreeTypeFont:
     key = (path, size)
@@ -18,7 +20,7 @@ def load_font(path: Optional[str] = None, size: int = 16) -> ImageFont.FreeTypeF
         if path:
             font = ImageFont.truetype(path, size)
         else:
-            font = ImageFont.truetype("DejaVuSans.ttf", size)
+            font = ImageFont.truetype(_BUNDLED_FONT, size)
     except (OSError, IOError):
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size)
