@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from bird_listener.persistence.models import BirdSummary, Detection
-from bird_listener.ranking.service import rank_birds
+from bird_listener.ranking.service import rank_birds, rank_birds_by_unique_days
 
 
 def test_rank_by_rarity() -> None:
@@ -113,3 +113,21 @@ def test_no_new_since_means_no_new_birds() -> None:
     ranked = rank_birds(detections, {"Bird": 1}, first_seen=first_seen)
 
     assert ranked[0].is_new is False
+
+
+def test_rank_by_unique_days_orders_by_rarest_days() -> None:
+    """A bird heard on many days ranks below one heard on fewer days,
+    even if total detection counts would order them differently."""
+    detections = [
+        Detection("House Finch", "Haemorhous mexicanus", 0.9, datetime(2026, 4, 6, 12, 0)),
+        Detection("Bald Eagle", "Haliaeetus leucocephalus", 0.7, datetime(2026, 4, 6, 12, 5)),
+    ]
+    # Bald Eagle heard on 1 day; House Finch heard on 10 different days.
+    unique_days = {"House Finch": 10, "Bald Eagle": 1}
+
+    ranked = rank_birds_by_unique_days(detections, unique_days)
+
+    assert ranked[0].common_name == "Bald Eagle"
+    assert ranked[0].lifetime_count == 1
+    assert ranked[1].common_name == "House Finch"
+    assert ranked[1].lifetime_count == 10

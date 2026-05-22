@@ -47,6 +47,14 @@ class BirdNetPiRepository:
         ).fetchall()
         return {row[0]: row[1] for row in rows}
 
+    def get_lifetime_unique_days(self) -> dict[str, int]:
+        rows = self._conn.execute(
+            "SELECT Com_Name, COUNT(DISTINCT Date) FROM detections "
+            "WHERE Confidence >= ? GROUP BY Com_Name",
+            (self._min_confidence,),
+        ).fetchall()
+        return {row[0]: row[1] for row in rows}
+
     def get_first_detection_times(self) -> dict[str, datetime]:
         rows = self._conn.execute(
             "SELECT Com_Name, MIN(Date || ' ' || Time) FROM detections "

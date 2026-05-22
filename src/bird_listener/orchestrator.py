@@ -16,7 +16,7 @@ from bird_listener.ports import (
     DisplayDriver,
     DisplayRenderer,
 )
-from bird_listener.ranking.service import rank_birds
+from bird_listener.ranking.service import rank_birds, rank_birds_by_unique_days
 
 logger = logging.getLogger(__name__)
 
@@ -168,9 +168,17 @@ class Orchestrator:
     def _render_display(self, now: datetime) -> None:
         since = now - timedelta(hours=self._config.recent_window_hours)
         recent = self._repo.get_detections_since(since)
-        lifetime = self._repo.get_lifetime_counts()
         first_seen = self._repo.get_first_detection_times()
-        ranked = rank_birds(recent, lifetime, first_seen=first_seen, new_since=since)
+        if self._config.rank_by_unique_days:
+            lifetime = self._repo.get_lifetime_unique_days()
+            ranked = rank_birds_by_unique_days(
+                recent, lifetime, first_seen=first_seen, new_since=since
+            )
+        else:
+            lifetime = self._repo.get_lifetime_counts()
+            ranked = rank_birds(
+                recent, lifetime, first_seen=first_seen, new_since=since
+            )
 
         max_birds = getattr(self._renderer, "max_birds", None)
         display_birds = ranked[:max_birds]

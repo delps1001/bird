@@ -102,6 +102,22 @@ class BirdNetGoRepository:
             conn.close()
         return {self._common_name(row[0]): row[1] for row in rows}
 
+    def get_lifetime_unique_days(self) -> dict[str, int]:
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT l.scientific_name, "
+                "COUNT(DISTINCT date(d.detected_at, 'unixepoch')) "
+                "FROM detections d "
+                "JOIN labels l ON d.label_id = l.id "
+                "WHERE d.confidence >= ? "
+                "GROUP BY l.scientific_name",
+                (self._min_confidence,),
+            ).fetchall()
+        finally:
+            conn.close()
+        return {self._common_name(row[0]): row[1] for row in rows}
+
     def get_first_detection_times(self) -> dict[str, datetime]:
         conn = self._connect()
         try:

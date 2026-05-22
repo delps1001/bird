@@ -67,3 +67,29 @@ def test_first_detection_times(db: sqlite3.Connection) -> None:
     firsts = repo.get_first_detection_times()
     assert firsts["House Finch"] == base
     assert firsts["Blue Jay"] == base + timedelta(hours=1)
+
+
+def test_lifetime_unique_days(db: sqlite3.Connection) -> None:
+    repo = SQLiteDetectionRepository(db)
+    day1 = datetime(2026, 4, 6, 12, 0, 0)
+    day2 = datetime(2026, 4, 7, 8, 30, 0)
+    day3 = datetime(2026, 4, 8, 18, 15, 0)
+
+    # House Finch: 5 detections spanning 2 unique days.
+    for i in range(3):
+        repo.record_detection(
+            Detection("House Finch", "Haemorhous mexicanus", 0.8, day1 + timedelta(minutes=i))
+        )
+    for i in range(2):
+        repo.record_detection(
+            Detection("House Finch", "Haemorhous mexicanus", 0.85, day2 + timedelta(minutes=i))
+        )
+
+    # Blue Jay: 3 detections spanning 3 unique days.
+    repo.record_detection(Detection("Blue Jay", "Cyanocitta cristata", 0.7, day1))
+    repo.record_detection(Detection("Blue Jay", "Cyanocitta cristata", 0.7, day2))
+    repo.record_detection(Detection("Blue Jay", "Cyanocitta cristata", 0.7, day3))
+
+    unique_days = repo.get_lifetime_unique_days()
+    assert unique_days["House Finch"] == 2
+    assert unique_days["Blue Jay"] == 3

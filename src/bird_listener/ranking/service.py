@@ -58,3 +58,25 @@ def rank_birds(
         -s.best_confidence,
     ))
     return new_birds + other_birds
+
+
+def rank_birds_by_unique_days(
+    recent_detections: list[Detection],
+    lifetime_unique_days: dict[str, int],
+    first_seen: dict[str, datetime] | None = None,
+    new_since: datetime | None = None,
+) -> list[BirdSummary]:
+    """Rank birds by the number of unique days they've been heard.
+
+    Behaves identically to :func:`rank_birds`, but the lifetime metric is
+    the count of distinct days a species has been detected (rather than
+    raw detection count). The supplied ``lifetime_unique_days`` mapping is
+    expected to already be filtered by the relevant confidence threshold
+    upstream, just like ``lifetime_counts``.
+    """
+    return rank_birds(
+        recent_detections,
+        lifetime_unique_days,
+        first_seen=first_seen,
+        new_since=new_since,
+    )

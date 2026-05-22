@@ -20,3 +20,4 @@ class Config:
     recent_window_hours: int = 24
     display_renderer: str = "fieldguide"
     boundary_inset: float = .07
+    rank_by_unique_days: bool = True

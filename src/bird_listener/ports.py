@@ -41,6 +41,10 @@ class DetectionRepository(Protocol):
         """Return {common_name: total_count} for all species ever detected."""
         ...
 
+    def get_lifetime_unique_days(self) -> dict[str, int]:
+        """Return {common_name: unique_day_count} for all species ever detected."""
+        ...
+
     def get_first_detection_times(self) -> dict[str, datetime]:
         """Return {common_name: earliest_detected_at} for all species ever detected."""
         ...

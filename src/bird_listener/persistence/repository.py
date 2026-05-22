@@ -45,6 +45,13 @@ class SQLiteDetectionRepository:
         ).fetchall()
         return {r[0]: r[1] for r in rows}
 
+    def get_lifetime_unique_days(self) -> dict[str, int]:
+        rows = self._conn.execute(
+            "SELECT common_name, COUNT(DISTINCT substr(detected_at, 1, 10)) "
+            "FROM detections GROUP BY common_name"
+        ).fetchall()
+        return {r[0]: r[1] for r in rows}
+
     def get_first_detection_times(self) -> dict[str, datetime]:
         rows = self._conn.execute(
             "SELECT common_name, MIN(detected_at) FROM detections GROUP BY common_name"
