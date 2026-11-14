@@ -60,9 +60,13 @@ class FocusRenderer:
             return render(tree, width, height, background=_BG)
 
         bird = birds[0]
-        img_h = round(usable_h * 0.62)
+        art = load_bird_image(bird.common_name, assets_dir)
+        bbox = art.getchannel("A").getbbox()  # trim transparent padding so the bird fills its area
+        if bbox:
+            art = art.crop(bbox)
+        img_h = round(usable_h * 0.66)
         text_h = usable_h - img_h
-        name_sz = max(_MIN_FONT, min(text_h * 2 // 5, usable_w // 10))
+        name_sz = max(_MIN_FONT, min(text_h // 3, usable_w // 10))
         sci_sz = max(_MIN_FONT, name_sz * 2 // 3)
         stat_sz = max(_MIN_FONT, name_sz // 2)
 
@@ -80,7 +84,7 @@ class FocusRenderer:
             ),
             children=[
                 Img(
-                    src=load_bird_image(bird.common_name, assets_dir),
+                    src=art,
                     style=Style(
                         width=usable_w, height=img_h,
                         object_fit="contain", image_rendering="pixelated",
@@ -90,7 +94,7 @@ class FocusRenderer:
                     style=Style(
                         width=usable_w, height=text_h, flex_direction="column",
                         align_items="center", justify_content="center",
-                        overflow="hidden",
+                        overflow="hidden", gap=max(2, name_sz // 5),
                     ),
                     children=[
                         Text(bird.common_name, style=Style(
