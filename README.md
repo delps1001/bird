@@ -62,6 +62,7 @@ python main.py --birdnetpi-db /path/to/birds.db --once
 | `--min-conf` | `0.85` | Minimum confidence threshold (0-1) |
 | `--db` | `detections.db` | Path to local detections database |
 | `--birdnetpi-db` | — | Path to BirdNET-Pi `birds.db` (enables display-only mode) |
+| `--renderer` | `grid` | Display layout (`grid`, `tower`, `focus`, ...). `focus` shows only the single rarest bird |
 | `--output` | `output` | Directory for rendered display images |
 | `--assets` | `assets/birds` | Directory containing bird images |
 | `--width` | `800` | Display width in pixels |
