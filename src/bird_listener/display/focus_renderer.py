@@ -2,7 +2,7 @@
 
 Shows only the top-ranked bird (new species first, otherwise the rarest in
 the recent window): large pixel-art image, then common name, scientific
-name, and a stats line. Newly-recognized species get a "NEW" badge.
+name, and a count line. Newly-recognized species show a star in place of the count.
 """
 from __future__ import annotations
 
@@ -68,14 +68,13 @@ class FocusRenderer:
         text_h = usable_h - img_h
         name_sz = max(_MIN_FONT, min(text_h // 3, usable_w // 10))
         sci_sz = max(_MIN_FONT, name_sz * 2 // 3)
-        stat_sz = max(_MIN_FONT, name_sz // 2)
+        stat_sz = max(_MIN_FONT, name_sz * 2 // 3)
 
+        # Same convention as the other renderers: a star replaces the count for new species.
+        stats = "\u2605" if bird.is_new else f"{bird.lifetime_count}x"
+        stat_color = _ACCENT if bird.is_new else _MUTED
         if bird.is_new:
-            stats = f"NEW SPECIES · {bird.recent_count} today"
-            stat_color = _ACCENT
-        else:
-            stats = f"Seen {bird.lifetime_count}x lifetime · {bird.recent_count} today"
-            stat_color = _MUTED
+            stat_sz = name_sz
 
         root = Box(
             style=Style(
