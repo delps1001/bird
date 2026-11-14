@@ -51,7 +51,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--renderer",
-        choices=["pillow", "grid", "picolay", "magazine", "scoreboard", "fieldguide", "filmstrip", "tower"],
+        choices=["pillow", "grid", "picolay", "magazine", "scoreboard", "fieldguide", "filmstrip", "tower", "focus"],
         default="grid",
         help="Which display renderer to use",
     )
@@ -116,6 +116,9 @@ def main() -> None:
     elif config.display_renderer == "tower":
         from bird_listener.display.tower_renderer import TowerRenderer
         renderer = TowerRenderer(inset=config.boundary_inset)
+    elif config.display_renderer == "focus":
+        from bird_listener.display.focus_renderer import FocusRenderer
+        renderer = FocusRenderer(inset=config.boundary_inset)
     else:
         renderer = PillowRenderer()
     if args.eink:
