@@ -45,9 +45,13 @@ def test_format_last_seen() -> None:
     from bird_listener.display.focus_renderer import format_last_seen
 
     now = datetime(2026, 11, 15, 9, 5)
-    assert format_last_seen(datetime(2026, 11, 15, 7, 8), now) == "Last seen 7:08 AM"
-    assert format_last_seen(datetime(2026, 11, 14, 15, 42), now) == "Last seen yesterday 3:42 PM"
-    assert format_last_seen(datetime(2026, 11, 12, 0, 1), now) == "Last seen Nov 12 12:01 AM"
+    assert format_last_seen(datetime(2026, 11, 15, 7, 8), now) == "Last seen Nov 15th 7:08 AM"
+    assert format_last_seen(datetime(2026, 11, 14, 15, 42), now) == "Last seen Nov 14th 3:42 PM"
+    assert format_last_seen(datetime(2026, 11, 1, 9, 0), now) == "Last seen Nov 1st 9:00 AM"
+    assert format_last_seen(datetime(2026, 11, 22, 9, 0), now) == "Last seen Nov 22nd 9:00 AM"
+    assert format_last_seen(datetime(2026, 11, 23, 9, 0), now) == "Last seen Nov 23rd 9:00 AM"
+    assert format_last_seen(datetime(2026, 11, 11, 9, 0), now) == "Last seen Nov 11th 9:00 AM"
+    assert format_last_seen(datetime(2026, 11, 12, 0, 1), now) == "Last seen Nov 12th 12:01 AM"
 
 
 def test_last_seen_changes_render() -> None:

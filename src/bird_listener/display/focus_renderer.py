@@ -6,7 +6,7 @@ name, and a count line. Newly-recognized species show a star in place of the cou
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
@@ -23,17 +23,20 @@ _MUTED = (130, 130, 130)
 _ACCENT = (235, 87, 87)
 
 
-def format_last_seen(seen: datetime, now: datetime) -> str:
-    """'Last seen 3:42 PM', 'Last seen yesterday 3:42 PM', or 'Last seen Nov 13 3:42 PM'.
+def _ordinal(day: int) -> str:
+    if 11 <= day % 100 <= 13:
+        return f"{day}th"
+    return f"{day}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th') }"
 
-    Both datetimes are naive local time (the app-wide convention).
+
+def format_last_seen(seen: datetime, now: datetime) -> str:
+    """Always the explicit date and time, e.g. 'Last seen Nov 9th 3:42 PM'.
+
+    The date is shown even for today so a frozen display is obvious at a glance.
+    The ``now`` argument is kept for API compatibility. Datetimes are naive local time.
     """
     clock = seen.strftime("%I:%M %p").lstrip("0")
-    if seen.date() == now.date():
-        return f"Last seen {clock}"
-    if seen.date() == (now - timedelta(days=1)).date():
-        return f"Last seen yesterday {clock}"
-    return f"Last seen {seen.strftime('%b')} {seen.day} {clock}"
+    return f"Last seen {seen.strftime('%b')} {_ordinal(seen.day)} {clock}"
 
 
 class FocusRenderer:
