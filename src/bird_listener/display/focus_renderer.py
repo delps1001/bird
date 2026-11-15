@@ -138,6 +138,72 @@ class FocusRenderer:
         )
         seen_sz = max(_MIN_FONT, name_sz // 2)
 
+        def label(text, size, color, align):
+            return Text(text, style=Style(
+                font_size=size, font_color=color, text_align=align, font_shrink=True))
+
+        gap = max(2, name_sz // 5)
+        if qr is None:
+            # Everything stacked and centered.
+            text_children = [
+                label(bird.common_name, name_sz, _DARK, "center"),
+                label(bird.scientific_name, sci_sz, _MUTED, "center"),
+                label(stats, stat_sz, stat_color, "center"),
+                *([label(last_seen, seen_sz, _MUTED, "center")] if last_seen else []),
+            ]
+            bottom = [Box(
+                style=Style(
+                    width=usable_w, height=text_h, flex_direction="column",
+                    align_items="center", justify_content="center",
+                    overflow="hidden", gap=gap,
+                ),
+                children=text_children,
+            )]
+        else:
+            # Name block centered above a footer row: stats + last seen on the left,
+            # the QR code on the right.
+            footer_h = qr.height
+            stat_sz_f = max(_MIN_FONT, name_sz * 2 // 3) if not bird.is_new else name_sz
+            bottom = [
+                Box(
+                    style=Style(
+                        width=usable_w, height=text_h - footer_h - gap,
+                        flex_direction="column", align_items="center",
+                        justify_content="center", overflow="hidden", gap=gap,
+                    ),
+                    children=[
+                        label(bird.common_name, name_sz, _DARK, "center"),
+                        label(bird.scientific_name, sci_sz, _MUTED, "center"),
+                    ],
+                ),
+                Box(
+                    style=Style(
+                        width=usable_w, height=footer_h, flex_direction="row",
+                        justify_content="space-between", align_items="center",
+                    ),
+                    children=[
+                        Box(
+                            style=Style(
+                                width=usable_w - qr.width - gap * 2, height=footer_h,
+                                flex_direction="column", align_items="start",
+                                justify_content="center", overflow="hidden", gap=gap,
+                            ),
+                            children=[
+                                label(stats, stat_sz_f, stat_color, "left"),
+                                *([label(last_seen, seen_sz, _MUTED, "left")] if last_seen else []),
+                            ],
+                        ),
+                        Img(
+                            src=qr,
+                            style=Style(
+                                width=qr.width, height=qr.height,
+                                object_fit="contain", image_rendering="pixelated",
+                            ),
+                        ),
+                    ],
+                ),
+            ]
+
         root = Box(
             style=Style(
                 width=width, height=height, background=_BG, padding=padding,
@@ -151,38 +217,7 @@ class FocusRenderer:
                         object_fit="contain", image_rendering="pixelated",
                     ),
                 ),
-                Box(
-                    style=Style(
-                        width=usable_w, height=text_h - (qr.height if qr else 0),
-                        flex_direction="column",
-                        align_items="center", justify_content="center",
-                        overflow="hidden", gap=max(2, name_sz // 5),
-                    ),
-                    children=[
-                        Text(bird.common_name, style=Style(
-                            font_size=name_sz, font_color=_DARK,
-                            text_align="center", font_shrink=True)),
-                        Text(bird.scientific_name, style=Style(
-                            font_size=sci_sz, font_color=_MUTED,
-                            text_align="center", font_shrink=True)),
-                        Text(stats, style=Style(
-                            font_size=stat_sz, font_color=stat_color,
-                            text_align="center", font_shrink=True)),
-                        *(
-                            [Text(last_seen, style=Style(
-                                font_size=seen_sz, font_color=_MUTED,
-                                text_align="center", font_shrink=True))]
-                            if last_seen else []
-                        ),
-                    ],
-                ),
+                *bottom,
             ],
         )
-        image = render(root, width, height, background=_BG)
-        if qr is not None:
-            # Bottom-right corner, inside the frame inset; the text block above is
-            # shortened by the QR's height so they never overlap.
-            x = width - padding[1] - qr.width
-            y = height - padding[2] - qr.height
-            image.paste(qr, (x, y))
-        return image
+        return render(root, width, height, background=_BG)
