@@ -184,7 +184,7 @@ class FocusRenderer:
                     children=[
                         Box(
                             style=Style(
-                                width=usable_w - qr.width - gap * 2, height=footer_h,
+                                width=usable_w - qr.width, height=footer_h,
                                 flex_direction="column", align_items="start",
                                 justify_content="center", overflow="hidden", gap=gap,
                             ),
