@@ -65,3 +65,74 @@ def test_last_seen_changes_render() -> None:
     a = r.render([with_seen(datetime(2026, 11, 15, 9, 1))], ASSETS_DIR, 800, 480)
     b = r.render([with_seen(datetime(2026, 11, 15, 11, 30))], ASSETS_DIR, 800, 480)
     assert list(a.getdata()) != list(b.getdata())
+
+
+def test_qr_code_only_with_base_url_and_detection_id() -> None:
+    from dataclasses import replace
+
+    b = replace(_bird("Barn Owl", 2), last_detection_id=142880)
+    plain = FocusRenderer().render([b], ASSETS_DIR, 480, 800)
+    with_qr = FocusRenderer(qr_base_url="http://192.168.1.91:8080").render([b], ASSETS_DIR, 480, 800)
+    assert list(plain.getdata()) != list(with_qr.getdata())
+    # No detection id -> no QR even when a base URL is configured.
+    no_id = FocusRenderer(qr_base_url="http://192.168.1.91:8080").render(
+        [_bird("Barn Owl", 2)], ASSETS_DIR, 480, 800)
+    assert list(no_id.getdata()) == list(plain.getdata())
+
+
+def test_qr_image_is_small_and_square() -> None:
+    from bird_listener.display.focus_renderer import qr_image
+
+    img = qr_image("http://192.168.1.91:8080/ui/detections/142880")
+    assert img.width == img.height <= 100
+
+
+def test_format_heard() -> None:
+    from bird_listener.display.focus_renderer import format_heard
+
+    assert format_heard(1) == "Once"
+    assert format_heard(2) == "Twice"
+    assert format_heard(14) == "14 times"
+    assert format_heard(1234) == "1,234 times"
+
+
+def test_qr_image_quiet_zone_is_optional() -> None:
+    from bird_listener.display.focus_renderer import qr_image
+
+    url = "http://192.168.1.91:8080/ui/detections/142880"
+    # Default keeps a 2-module (6px) quiet zone on every side; quiet=0 drops it.
+    assert qr_image(url).width - qr_image(url, quiet=0).width == 12
+    assert qr_image(url, quiet=0).getpixel((0, 0)) == (0, 0, 0)  # finder pattern corner
+
+
+def test_long_name_and_qr_stay_inside_the_inset() -> None:
+    from dataclasses import replace
+    from datetime import datetime
+
+    b = replace(
+        _bird("Black-and-white Warbler", 1234),
+        last_detected_at=datetime(2026, 11, 14, 14, 50), last_detection_id=142880,
+    )
+    w, h, inset = 480, 800, 0.07
+    img = FocusRenderer(inset=inset, qr_base_url="http://192.168.1.91:8080").render(
+        [b], ASSETS_DIR, w, h)
+    ix, iy = round(inset * w), round(inset * h)
+    inner = (ix, iy, w - ix, h - iy)
+    blank = img.copy()
+    blank.paste((255, 255, 255), inner)
+    assert blank.getextrema() == ((255, 255), (255, 255), (255, 255))
+
+
+def test_text_uses_only_panel_palette_colours() -> None:
+    """Below the sprite, only pure black/white/red (plus anti-aliasing) is drawn."""
+    from datetime import datetime
+
+    b = BirdSummary(
+        common_name="Barn Owl", scientific_name="Tyto alba", lifetime_count=1,
+        recent_count=1, best_confidence=0.9, is_new=True,
+        last_detected_at=datetime(2026, 11, 14, 14, 50), last_detection_id=1,
+    )
+    img = FocusRenderer(qr_base_url="http://192.168.1.91:8080").render([b], ASSETS_DIR, 480, 800)
+    colours = {c for _, c in img.crop((0, 700, 480, 800)).getcolors(maxcolors=100000)}
+    assert (0, 0, 0) in colours and (255, 0, 0) in colours
+    assert all(r >= g == b for r, g, b in colours)  # greys and reds only

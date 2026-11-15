@@ -43,6 +43,7 @@ def rank_birds(
                 best_confidence=best.confidence,
                 last_detected_at=latest.detected_at,
                 is_new=is_new,
+                last_detection_id=latest.id,
             )
         )
 

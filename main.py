@@ -63,6 +63,12 @@ def main() -> None:
         help="Which display renderer to use",
     )
     parser.add_argument("--eink", action="store_true", help="Use e-ink display driver instead of file output")
+    parser.add_argument(
+        "--qr-base-url",
+        type=str,
+        default=None,
+        help="BirdNET-Go base URL (e.g. http://192.168.1.91:8080); focus renderer shows a QR code to the latest detection's page",
+    )
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--inset",
@@ -129,7 +135,7 @@ def main() -> None:
         renderer = TowerRenderer(inset=config.boundary_inset)
     elif config.display_renderer == "focus":
         from bird_listener.display.focus_renderer import FocusRenderer
-        renderer = FocusRenderer(inset=config.boundary_inset)
+        renderer = FocusRenderer(inset=config.boundary_inset, qr_base_url=args.qr_base_url)
     else:
         renderer = PillowRenderer()
     if args.eink:

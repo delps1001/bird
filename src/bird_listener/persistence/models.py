@@ -10,6 +10,7 @@ class Detection:
     scientific_name: str
     confidence: float
     detected_at: datetime
+    id: int | None = None  # source-database row id, when the backend has one
 
 
 @dataclass(frozen=True)
@@ -21,3 +22,4 @@ class BirdSummary:
     best_confidence: float
     last_detected_at: datetime | None = None
     is_new: bool = False
+    last_detection_id: int | None = None
