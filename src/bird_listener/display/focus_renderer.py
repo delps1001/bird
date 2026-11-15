@@ -39,15 +39,46 @@ def format_last_seen(seen: datetime, now: datetime) -> str:
     return f"Last seen {seen.strftime('%b')} {_ordinal(seen.day)} {clock}"
 
 
+_QR_MODULE_PX = 3
+_QR_QUIET_MODULES = 2
+
+
+def qr_image(url: str) -> Image.Image:
+    """Smallest practical QR code for ``url``: low error correction, 3px modules."""
+    import segno  # lazy: only needed when a QR code is requested
+
+    matrix = segno.make(url, error="l", micro=False).matrix
+    n = len(matrix)
+    quiet = _QR_QUIET_MODULES
+    size = (n + 2 * quiet) * _QR_MODULE_PX
+    img = Image.new("RGB", (size, size), (255, 255, 255))
+    px = img.load()
+    for r, row in enumerate(matrix):
+        for c, v in enumerate(row):
+            if v:
+                for dy in range(_QR_MODULE_PX):
+                    for dx in range(_QR_MODULE_PX):
+                        px[(c + quiet) * _QR_MODULE_PX + dx, (r + quiet) * _QR_MODULE_PX + dy] = (0, 0, 0)
+    return img
+
+
 class FocusRenderer:
     """Single-bird vertical layout showing only the rarest recent bird."""
 
     # Orchestrator re-renders when a displayed bird's last-detected time changes.
     shows_last_seen = True
 
-    def __init__(self, inset: float = 0.0, now: Callable[[], datetime] = datetime.now):
+    def __init__(
+        self,
+        inset: float = 0.0,
+        now: Callable[[], datetime] = datetime.now,
+        qr_base_url: str | None = None,
+    ):
         self._inset = inset
         self._now = now
+        # e.g. "http://192.168.1.91:8080": when set, a tiny QR code links to the
+        # BirdNET-Go page (with audio) for the displayed bird's latest detection.
+        self._qr_base_url = qr_base_url.rstrip("/") if qr_base_url else None
 
     @property
     def max_birds(self) -> int:
@@ -143,4 +174,12 @@ class FocusRenderer:
                 ),
             ],
         )
-        return render(root, width, height, background=_BG)
+        image = render(root, width, height, background=_BG)
+        if self._qr_base_url and bird.last_detection_id is not None:
+            url = f"{self._qr_base_url}/ui/detections/{bird.last_detection_id}"
+            qr = qr_image(url)
+            # Bottom-right corner, inside the frame inset.
+            x = width - padding[1] - qr.width
+            y = height - padding[2] - qr.height
+            image.paste(qr, (x, y))
+        return image

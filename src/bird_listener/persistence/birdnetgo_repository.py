@@ -68,7 +68,7 @@ class BirdNetGoRepository:
         conn = self._connect()
         try:
             rows = conn.execute(
-                "SELECT l.scientific_name, d.confidence, d.detected_at "
+                "SELECT l.scientific_name, d.confidence, d.detected_at, d.id "
                 "FROM detections d "
                 "JOIN labels l ON d.label_id = l.id "
                 "WHERE d.detected_at >= ? AND d.confidence >= ? "
@@ -83,6 +83,7 @@ class BirdNetGoRepository:
                 scientific_name=row[0],
                 confidence=row[1],
                 detected_at=datetime.fromtimestamp(row[2]),
+                id=row[3],
             )
             for row in rows
         ]

@@ -65,3 +65,23 @@ def test_last_seen_changes_render() -> None:
     a = r.render([with_seen(datetime(2026, 11, 15, 9, 1))], ASSETS_DIR, 800, 480)
     b = r.render([with_seen(datetime(2026, 11, 15, 11, 30))], ASSETS_DIR, 800, 480)
     assert list(a.getdata()) != list(b.getdata())
+
+
+def test_qr_code_only_with_base_url_and_detection_id() -> None:
+    from dataclasses import replace
+
+    b = replace(_bird("Barn Owl", 2), last_detection_id=142880)
+    plain = FocusRenderer().render([b], ASSETS_DIR, 480, 800)
+    with_qr = FocusRenderer(qr_base_url="http://192.168.1.91:8080").render([b], ASSETS_DIR, 480, 800)
+    assert list(plain.getdata()) != list(with_qr.getdata())
+    # No detection id -> no QR even when a base URL is configured.
+    no_id = FocusRenderer(qr_base_url="http://192.168.1.91:8080").render(
+        [_bird("Barn Owl", 2)], ASSETS_DIR, 480, 800)
+    assert list(no_id.getdata()) == list(plain.getdata())
+
+
+def test_qr_image_is_small_and_square() -> None:
+    from bird_listener.display.focus_renderer import qr_image
+
+    img = qr_image("http://192.168.1.91:8080/ui/detections/142880")
+    assert img.width == img.height <= 100
