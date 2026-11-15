@@ -6,7 +6,9 @@ name, and a count line. Newly-recognized species show a star in place of the cou
 """
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Callable
 
 from PIL import Image
 
@@ -21,11 +23,28 @@ _MUTED = (130, 130, 130)
 _ACCENT = (235, 87, 87)
 
 
+def format_last_seen(seen: datetime, now: datetime) -> str:
+    """'Last seen 3:42 PM', 'Last seen yesterday 3:42 PM', or 'Last seen Nov 13 3:42 PM'.
+
+    Both datetimes are naive local time (the app-wide convention).
+    """
+    clock = seen.strftime("%I:%M %p").lstrip("0")
+    if seen.date() == now.date():
+        return f"Last seen {clock}"
+    if seen.date() == (now - timedelta(days=1)).date():
+        return f"Last seen yesterday {clock}"
+    return f"Last seen {seen.strftime('%b')} {seen.day} {clock}"
+
+
 class FocusRenderer:
     """Single-bird vertical layout showing only the rarest recent bird."""
 
-    def __init__(self, inset: float = 0.0):
+    # Orchestrator re-renders when a displayed bird's last-detected time changes.
+    shows_last_seen = True
+
+    def __init__(self, inset: float = 0.0, now: Callable[[], datetime] = datetime.now):
         self._inset = inset
+        self._now = now
 
     @property
     def max_birds(self) -> int:
@@ -66,7 +85,7 @@ class FocusRenderer:
             art = art.crop(bbox)
         img_h = round(usable_h * 0.66)
         text_h = usable_h - img_h
-        name_sz = max(_MIN_FONT, min(text_h // 3, usable_w // 10))
+        name_sz = max(_MIN_FONT, min(text_h // 4, usable_w // 10))
         sci_sz = max(_MIN_FONT, name_sz * 2 // 3)
         stat_sz = max(_MIN_FONT, name_sz * 2 // 3)
 
@@ -75,6 +94,12 @@ class FocusRenderer:
         stat_color = _ACCENT if bird.is_new else _MUTED
         if bird.is_new:
             stat_sz = name_sz
+
+        last_seen = (
+            format_last_seen(bird.last_detected_at, self._now())
+            if bird.last_detected_at else None
+        )
+        seen_sz = max(_MIN_FONT, name_sz // 2)
 
         root = Box(
             style=Style(
@@ -105,6 +130,12 @@ class FocusRenderer:
                         Text(stats, style=Style(
                             font_size=stat_sz, font_color=stat_color,
                             text_align="center", font_shrink=True)),
+                        *(
+                            [Text(last_seen, style=Style(
+                                font_size=seen_sz, font_color=_MUTED,
+                                text_align="center", font_shrink=True))]
+                            if last_seen else []
+                        ),
                     ],
                 ),
             ],

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from bird_listener.persistence.models import Detection
@@ -30,6 +30,8 @@ def load_label_map(label_file: Path) -> dict[str, str]:
     return mapping
 
 
+# BirdNET-Go stores UTC epoch seconds; Detection.detected_at is naive *local* time
+# everywhere else in the app, so convert on read.
 class BirdNetGoRepository:
     """Read-only repository that queries BirdNET-Go's normalized v2 schema.
 
@@ -62,7 +64,7 @@ class BirdNetGoRepository:
         raise NotImplementedError("BirdNET-Go repository is read-only")
 
     def get_detections_since(self, since: datetime) -> list[Detection]:
-        since_ts = int(since.replace(tzinfo=timezone.utc).timestamp())
+        since_ts = int(since.timestamp())  # naive `since` is local time
         conn = self._connect()
         try:
             rows = conn.execute(
@@ -80,9 +82,7 @@ class BirdNetGoRepository:
                 common_name=self._common_name(row[0]),
                 scientific_name=row[0],
                 confidence=row[1],
-                detected_at=datetime.fromtimestamp(row[2], tz=timezone.utc).replace(
-                    tzinfo=None
-                ),
+                detected_at=datetime.fromtimestamp(row[2]),
             )
             for row in rows
         ]
@@ -107,7 +107,7 @@ class BirdNetGoRepository:
         try:
             rows = conn.execute(
                 "SELECT l.scientific_name, "
-                "COUNT(DISTINCT date(d.detected_at, 'unixepoch')) "
+                "COUNT(DISTINCT date(d.detected_at, 'unixepoch', 'localtime')) "
                 "FROM detections d "
                 "JOIN labels l ON d.label_id = l.id "
                 "WHERE d.confidence >= ? "
@@ -132,8 +132,6 @@ class BirdNetGoRepository:
         finally:
             conn.close()
         return {
-            self._common_name(row[0]): datetime.fromtimestamp(
-                row[1], tz=timezone.utc
-            ).replace(tzinfo=None)
+            self._common_name(row[0]): datetime.fromtimestamp(row[1])
             for row in rows
         }
