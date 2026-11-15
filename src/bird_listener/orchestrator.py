@@ -39,7 +39,7 @@ class Orchestrator:
         self._display = display
         self._audio_queue: queue.Queue[tuple[bytes, int]] = queue.Queue(maxsize=2)
         self._stop = threading.Event()
-        self._last_ranked_names: list[str] | None = None
+        self._last_ranked_names: list | None = None
 
     def run_once(self) -> None:
         """Execute one capture-analyze-render cycle (for testing)."""
@@ -183,7 +183,10 @@ class Orchestrator:
         max_birds = getattr(self._renderer, "max_birds", None)
         display_birds = ranked[:max_birds]
 
-        ranked_names = [b.common_name for b in display_birds]
+        ranked_names: list = [b.common_name for b in display_birds]
+        if getattr(self._renderer, "shows_last_seen", False):
+            # Re-render when the same bird is heard again (its last-seen time moves).
+            ranked_names = [(b.common_name, b.last_detected_at) for b in display_birds]
         if ranked_names == self._last_ranked_names:
             logger.info("Bird list unchanged, skipping display refresh")
             return

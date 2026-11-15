@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from PIL import Image
@@ -200,3 +200,31 @@ def test_capture_overlaps_analysis(db: sqlite3.Connection) -> None:
         f"Capture ({audio.call_count}) should outpace analysis ({analyzer.call_count}) "
         f"since they run in parallel"
     )
+
+
+def test_rerenders_when_same_bird_seen_again_if_renderer_shows_last_seen(tmp_path) -> None:
+    from bird_listener.persistence.schema import init_db
+
+    class CountingRenderer:
+        shows_last_seen = True
+        max_birds = 1
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def render(self, birds, assets_dir, w, h):
+            self.calls += 1
+            return Image.new("RGB", (w, h), (255, 255, 255))
+
+    repo = SQLiteDetectionRepository(init_db(tmp_path / "d.db"))
+    renderer = CountingRenderer()
+    cfg = Config(output_dir=tmp_path, db_path=tmp_path / "d.db")
+    orch = Orchestrator(cfg, repo, renderer, FileDisplayDriver(tmp_path))
+    now = datetime.now()
+    repo.record_detection(Detection("Barn Owl", "Tyto alba", 0.9, now))
+    orch._render_display(now)
+    orch._render_display(now)  # nothing changed -> skipped
+    assert renderer.calls == 1
+    repo.record_detection(Detection("Barn Owl", "Tyto alba", 0.9, now + timedelta(seconds=1)))
+    orch._render_display(now)
+    assert renderer.calls == 2

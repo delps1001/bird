@@ -37,3 +37,27 @@ def test_new_bird_differs_and_empty_renders() -> None:
     b = r.render([_bird("Bald Eagle", 1)], ASSETS_DIR, 800, 480)
     assert list(a.getdata()) != list(b.getdata())
     assert r.render([], ASSETS_DIR, 800, 480).size == (800, 480)
+
+
+def test_format_last_seen() -> None:
+    from datetime import datetime
+
+    from bird_listener.display.focus_renderer import format_last_seen
+
+    now = datetime(2026, 11, 15, 9, 5)
+    assert format_last_seen(datetime(2026, 11, 15, 7, 8), now) == "Last seen 7:08 AM"
+    assert format_last_seen(datetime(2026, 11, 14, 15, 42), now) == "Last seen yesterday 3:42 PM"
+    assert format_last_seen(datetime(2026, 11, 12, 0, 1), now) == "Last seen Nov 12 12:01 AM"
+
+
+def test_last_seen_changes_render() -> None:
+    from datetime import datetime
+
+    now = datetime(2026, 11, 15, 12, 0)
+    r = FocusRenderer(now=lambda: now)
+    def with_seen(t):
+        b = _bird("Barn Owl", 2)
+        return BirdSummary(**{**b.__dict__, "last_detected_at": t})
+    a = r.render([with_seen(datetime(2026, 11, 15, 9, 1))], ASSETS_DIR, 800, 480)
+    b = r.render([with_seen(datetime(2026, 11, 15, 11, 30))], ASSETS_DIR, 800, 480)
+    assert list(a.getdata()) != list(b.getdata())

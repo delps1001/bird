@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -127,7 +127,7 @@ def _seed(
 ) -> None:
     """Insert a detection row with its label."""
     label_id = _ensure_label(conn, sci_name, model_id)
-    ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
+    ts = int(dt.timestamp())  # naive dt is local time
     conn.execute(
         "INSERT INTO detections (model_id, label_id, source_id, detected_at, confidence) "
         "VALUES (?, ?, ?, ?, ?)",
@@ -342,3 +342,24 @@ def test_multiple_detections_same_species_share_label(birdnetgo_db, label_file):
 
     counts = repo.get_lifetime_counts()
     assert counts["House Finch"] == 3
+
+
+def test_detected_at_is_converted_from_utc_epoch_to_local(birdnetgo_db, label_file, monkeypatch) -> None:
+    import time
+
+    monkeypatch.setenv("TZ", "America/New_York")
+    time.tzset()
+    try:
+        conn = sqlite3.connect(birdnetgo_db)
+        label_id = _ensure_label(conn, "Cardinalis cardinalis")
+        # 2026-11-15 17:00:00 UTC == 12:00:00 EST
+        conn.execute(
+            "INSERT INTO detections (model_id, label_id, source_id, detected_at, confidence) "
+            "VALUES (1, ?, 1, 1794762000, 0.95)", (label_id,))
+        conn.commit(); conn.close()
+        repo = BirdNetGoRepository(birdnetgo_db, label_file=label_file)
+        got = repo.get_detections_since(datetime(2026, 11, 15, 0, 0))
+        assert got[0].detected_at == datetime(2026, 11, 15, 12, 0)
+    finally:
+        monkeypatch.undo()
+        time.tzset()
