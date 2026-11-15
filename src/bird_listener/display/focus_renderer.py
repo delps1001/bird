@@ -117,6 +117,9 @@ class FocusRenderer:
         bbox = art.getchannel("A").getbbox()  # trim transparent padding so the bird fills its area
         if bbox:
             art = art.crop(bbox)
+        qr = None
+        if self._qr_base_url and bird.last_detection_id is not None:
+            qr = qr_image(f"{self._qr_base_url}/ui/detections/{bird.last_detection_id}")
         img_h = round(usable_h * 0.66)
         text_h = usable_h - img_h
         name_sz = max(_MIN_FONT, min(text_h // 4, usable_w // 10))
@@ -150,7 +153,8 @@ class FocusRenderer:
                 ),
                 Box(
                     style=Style(
-                        width=usable_w, height=text_h, flex_direction="column",
+                        width=usable_w, height=text_h - (qr.height if qr else 0),
+                        flex_direction="column",
                         align_items="center", justify_content="center",
                         overflow="hidden", gap=max(2, name_sz // 5),
                     ),
@@ -175,10 +179,9 @@ class FocusRenderer:
             ],
         )
         image = render(root, width, height, background=_BG)
-        if self._qr_base_url and bird.last_detection_id is not None:
-            url = f"{self._qr_base_url}/ui/detections/{bird.last_detection_id}"
-            qr = qr_image(url)
-            # Bottom-right corner, inside the frame inset.
+        if qr is not None:
+            # Bottom-right corner, inside the frame inset; the text block above is
+            # shortened by the QR's height so they never overlap.
             x = width - padding[1] - qr.width
             y = height - padding[2] - qr.height
             image.paste(qr, (x, y))
