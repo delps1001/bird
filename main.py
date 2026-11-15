@@ -26,6 +26,13 @@ def main() -> None:
     parser.add_argument("--assets", type=str, default="assets/birds")
     parser.add_argument("--width", type=int, default=800)
     parser.add_argument("--height", type=int, default=480)
+    parser.add_argument(
+        "--rotate",
+        type=int,
+        choices=[0, 90, 180, 270],
+        default=0,
+        help="Rotate output counter-clockwise by this many degrees (90/270 render portrait, e.g. a vertically mounted e-ink frame)",
+    )
     parser.add_argument("--interval", type=int, default=30)
     parser.add_argument("--duration", type=int, default=15)
     parser.add_argument("--overlap", type=int, default=3, help="Seconds of overlap between audio chunks")
@@ -69,6 +76,10 @@ def main() -> None:
         level=logging.DEBUG if args.debug else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+
+    if args.rotate in (90, 270):
+        # Render in the rotated (portrait) orientation; the driver rotates back to panel-native.
+        args.width, args.height = args.height, args.width
 
     config_kwargs = dict(
         lat=args.lat,
@@ -126,6 +137,10 @@ def main() -> None:
         display = EinkDisplayDriver()
     else:
         display = FileDisplayDriver(config.output_dir)
+
+    if args.rotate:
+        from bird_listener.display.rotated_driver import RotatedDisplayDriver
+        display = RotatedDisplayDriver(display, args.rotate)
 
     if args.birdnetpi_db:
         # Display-only mode: read from BirdNET-Pi's database
