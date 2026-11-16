@@ -69,6 +69,12 @@ def main() -> None:
         default=None,
         help="BirdNET-Go base URL (e.g. http://192.168.1.91:8080); focus renderer shows a QR code to the latest detection's page",
     )
+    parser.add_argument(
+        "--nfc-port",
+        type=int,
+        default=None,
+        help="Serve http://<frame>:<port>/latest, a redirect to the BirdNET-Go page of the bird on screen (for a static NFC tag); requires --qr-base-url",
+    )
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--inset",
@@ -138,6 +144,14 @@ def main() -> None:
         renderer = FocusRenderer(inset=config.boundary_inset, qr_base_url=args.qr_base_url)
     else:
         renderer = PillowRenderer()
+    if args.nfc_port is not None:
+        if not args.qr_base_url:
+            parser.error("--nfc-port requires --qr-base-url")
+        from bird_listener.nfc_redirect import CurrentDetection, RecordingRenderer, start_server
+
+        current = CurrentDetection()
+        renderer = RecordingRenderer(renderer, current)
+        start_server(args.qr_base_url, current, args.nfc_port)
     if args.eink:
         from bird_listener.display.eink_driver import EinkDisplayDriver
         display = EinkDisplayDriver()
